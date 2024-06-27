@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Поиск авто для аренды!</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div class="input-container">
+    <div class="search-container">
+        <h1>Поиск машины для аренды</h1>
+        <form id="searchForm">
+            <label for="query">Введите марку машины:</label>
+            <input type="text" id="query" name="query" placeholder="Например, BMW, Toyota...">
+            <button type="submit">Поиск</button>
+        </form>
+        <button onclick="window.location.href='http://localhost:3000';">Переход на сервис 1</button>
+    </div>
+</div>
+<div class="output-container">
+    <div class="results-container" id="results"></div>
+
+    <!-- Модальное окно для просмотра изображений -->
+    <div id="imageModal" class="modal">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <img class="modal-content" id="largeImage">
+        <div id="caption"></div>
+        <button class="prev" onclick="changeImage(-1)">&#10094;</button>
+        <button class="next" onclick="changeImage(1)">&#10095;</button>
+    </div>
+
+    <script>
+        // Обработчик события для формы поиска
+        document.getElementById('searchForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Предотвращаем стандартное действие формы
+
+            const query = document.getElementById('query').value.trim(); // Получаем значение из поля ввода
+            fetch(`/search${query ? `?query=${query}` : ''}`) // Отправляем запрос на сервер
+                .then(response => response.json()) // Преобразуем ответ в JSON
+                .then(data => {
+                    const resultsDiv = document.getElementById('results');
+                    resultsDiv.innerHTML = ''; // Очищаем контейнер для результатов
+                    data.forEach(row => {
+                        const imageUrl = getImageUrl(row.image_path); // Получаем правильный URL изображения
+                        const cardDiv = document.createElement('div'); // Создаем элемент для карточки автомобиля
+                        cardDiv.innerHTML = `
+                            <img src="${imageUrl}" alt="Car Image" style="width:100%; height:auto;" onclick="openModal('${imageUrl}')">
+                            <p>Марка: ${row.make}</p>
+                            <p>Модель: ${row.model}</p>
+                            <p>Год: ${row.year}</p>
+                            <p>Владелец: ${row.owner_name || 'недоступно'}</p>
+                            <p>Email владельца: ${row.owner_email || 'недоступно'}</p>
+                            <p>Телефон владельца: ${row.owner_phone || 'недоступно'}</p>
+                        `;
+                        resultsDiv.appendChild(cardDiv); // Добавляем карточку в контейнер для результатов
+                    });
+                })
+                .catch(error => console.error('Ошибка:', error));
+        });
+
+        // Функция для получения URL изображения
+        function getImageUrl(fullPath) {
+            const fileName = fullPath.split('/').pop(); // Извлекаем имя файла из полного пути
+            return `/uploads/${fileName}`; // Возвращаем URL к файлу в папке uploads
+        }
+
+        // Переменные для работы с модальным окном
+        let currentIndex = 0;
+        let imagePaths = [];
+
+        // Функция для открытия модального окна с изображением
+        function openModal(imageUrl) {
+            imagePaths = [imageUrl]; // Теперь мы храним URL изображения
+            currentIndex = 0;
+            updateModalImage();
+            document.getElementById('imageModal').style.display = "block"; // Отображаем модальное окно
+        }
+
+        // Функция для обновления изображения в модальном окне
+        function updateModalImage() {
+            const imgElement = document.getElementById('largeImage');
+            imgElement.src = imagePaths[currentIndex]; // Устанавливаем src из списка URL
+            document.getElementById('caption').innerHTML = imagePaths[currentIndex]; // Обновляем подпись под изображением
+        }
+
+        // Функция для закрытия модального окна
+        function closeModal() {
+            document.getElementById('imageModal').style.display = "none"; // Скрываем модальное окно
+        }
+
+        // Функция для переключения между изображениями в модальном окне
+        function changeImage(direction) {
+            currentIndex += direction;
+            if (currentIndex >= imagePaths.length) {
+                currentIndex = 0;
+            } else if (currentIndex < 0) {
+                currentIndex = imagePaths.length - 1;
+            }
+            updateModalImage(); // Обновляем изображение в модальном окне
+        }
+    </script>
+</div>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель менеджера</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Функция для получения списка автомобилей и их отображения
+            function fetchAndDisplayCars() {
+                fetch('/api/cars')
+                    .then(response => response.json())
+                    .then(cars => {
+                        const table = document.getElementById('carTable');
+                        // Очистка таблицы перед добавлением новых данных
+                        table.innerHTML = '';
+                        cars.forEach(car => {
+                            const row = table.insertRow();
+                            row.insertCell(0).textContent = car.id;
+                            row.insertCell(1).textContent = car.make;
+                            row.insertCell(2).textContent = car.model;
+                            row.insertCell(3).textContent = car.year;
+                            row.insertCell(4).textContent = car.status === 'Rented' ? 'Арендован' : 'Свободен';
+
+                            const statusButton = document.createElement('button');
+                            statusButton.textContent = car.status === 'Rented' ? 'Изменить статус' : 'Изменить статус';
+                            statusButton.addEventListener('click', () => {
+                                const newStatus = car.status === 'Rented' ? 'Available' : 'Rented';
+                                fetch(`/api/cars/${car.id}/status`, {
+                                    method: 'PUT',
+                                    headers: {
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({ status: newStatus })
+                                })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.updated) {
+                                            car.status = newStatus;
+                                            row.cells[4].textContent = newStatus === 'Rented' ? 'Арендован' : 'Свободен';
+                                            statusButton.textContent = newStatus === 'Rented' ? 'Изменить статус' : 'Изменить статус';
+                                        }
+                                    });
+                            });
+                            row.insertCell(5).appendChild(statusButton);
+                        });
+                    })
+                    .catch(error => console.error('Ошибка загрузки данных:', error));
+            }
+
+            // Вызов функции при загрузке страницы для начального отображения данных
+            fetchAndDisplayCars();
+        });
+    </script>
+</head>
+<body>
+    <h1>Панель менеджера</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Марка</th>
+                <th>Модель</th>
+                <th>Год</th>
+                <th>Статус</th>
+                <th>Действие</th>
+            </tr>
+        </thead>
+        <tbody id="carTable"></tbody>
+    </table>
+</body>
+</html>

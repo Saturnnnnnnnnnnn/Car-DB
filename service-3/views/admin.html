@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель администратора</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Панель Администратора</h1>
+        
+        <!-- Кнопки для управления контентом -->
+        <div id="adminActions">
+            <button onclick="fetchCars()">Список автомобилей</button>
+            <button onclick="fetchOwners()">Список владельцев</button>
+            <button onclick="showAddCarForm()">Добавить автомобиль</button>
+            <button onclick="showAddOwnerForm()">Добавить владельца</button>
+        </div>
+        
+        <!-- Здесь будет контент -->
+        <div id="content"></div>
+    </div>
+
+    <!-- Скрипт для работы с админской панелью -->
+    <script>
+        async function fetchCars() {
+            const response = await fetch('/api/cars');
+            const cars = await response.json();
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = cars.map(car => `
+                <div>
+                    <h2>${car.make} ${car.model}</h2>
+                    <p>Год: ${car.year}</p>
+                    <p>Статус: ${car.status === 1 ? 'Available' : 'Rented'}</p>
+                    <button onclick="deleteCar(${car.id})">Удалить</button>
+                </div>
+            `).join('');
+        }
+
+        async function fetchOwners() {
+            const response = await fetch('/api/owners');
+            const owners = await response.json();
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = owners.map(owner => `
+                <div>
+                    <h2>${owner.name}</h2>
+                    <p>Email: ${owner.email}</p>
+                    <p>Телефон: ${owner.phone}</p>
+                    <button onclick="deleteOwner(${owner.id})">Удалить</button>
+                </div>
+            `).join('');
+        }
+
+        function showAddCarForm() {
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = `
+                <h2>Добавить автомобиль</h2>
+                <form id="addCarForm">
+                    <label for="make">Марка:</label>
+                    <input type="text" id="make" name="make" required><br>
+                    <label for="model">Модель:</label>
+                    <input type="text" id="model" name="model" required><br>
+                    <label for="year">Год:</label>
+                    <input type="text" id="year" name="year" required><br>
+                    <label for="carImage">Фото автомобиля:</label>
+                    <input type="file" id="carImage" name="carImage" required><br>
+                    <button type="submit">Добавить</button>
+                </form>
+            `;
+            document.getElementById('addCarForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const response = await fetch('/api/cars', {
+                    method: 'POST',
+                    body: formData
+                });
+                if (response.ok) {
+                    fetchCars();
+                }
+            });
+        }
+
+        function showAddOwnerForm() {
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = `
+                <h2>Добавить владельца</h2>
+                <form id="addOwnerForm">
+                    <label for="carId">ID автомобиля:</label>
+                    <input type="text" id="carId" name="carId" required><br>
+                    <label for="name">Имя:</label>
+                    <input type="text" id="name" name="name" required><br>
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required><br>
+                    <label for="phone">Телефон:</label>
+                    <input type="text" id="phone" name="phone" required><br>
+                    <button type="submit">Добавить</button>
+                </form>
+            `;
+            document.getElementById('addOwnerForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const response = await fetch('/api/owners', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(Object.fromEntries(formData))
+                });
+                if (response.ok) {
+                    fetchOwners();
+                }
+            });
+        }
+
+        async function deleteCar(carId) {
+            const response = await fetch(`/api/cars/${carId}`, { method: 'DELETE' });
+            if (response.ok) {
+                fetchCars();
+            }
+        }
+
+        async function deleteOwner(ownerId) {
+            const response = await fetch(`/api/owners/${ownerId}`, { method: 'DELETE' });
+            if (response.ok) {
+                fetchOwners();
+            }
+        }
+    </script>
+</body>
+</html>

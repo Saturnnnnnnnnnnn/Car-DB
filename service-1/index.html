@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>СатурнАвтоСервис</title>
+    <!-- Подключение шрифта Roboto -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Подключение CSS-стилей -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="brand-name">СатурнАвтоСервис</h1>
+        <!-- Форма для ввода данных об автомобиле и владельце -->
+        <form id="carForm" enctype="multipart/form-data">
+            <h2>Введите свои данные:</h2>
+            <!-- Поле ввода марки автомобиля -->
+            <div class="form-group">
+                <label for="make">Марка автомобиля:</label>
+                <input type="text" id="make" name="make" required>
+            </div>
+            <!-- Поле ввода модели автомобиля -->
+            <div class="form-group">
+                <label for="model">Модель автомобиля:</label>
+                <input type="text" id="model" name="model" required>
+            </div>
+            <!-- Поле ввода года выпуска автомобиля -->
+            <div class="form-group">
+                <label for="year">Год выпуска:</label>
+                <input type="text" id="year" name="year" required>
+            </div>
+            <!-- Поле ввода имени владельца -->
+            <div class="form-group">
+                <label for="ownerName">Имя владельца:</label>
+                <input type="text" id="ownerName" name="ownerName" required>
+            </div>
+            <!-- Поле ввода email владельца -->
+            <div class="form-group">
+                <label for="ownerEmail">Email владельца:</label>
+                <input type="email" id="ownerEmail" name="ownerEmail" required>
+            </div>
+            <!-- Поле ввода номера телефона владельца -->
+            <div class="form-group">
+                <label for="ownerPhone">Номер телефона владельца:</label>
+                <input type="text" id="ownerPhone" name="ownerPhone" required>
+            </div>
+            <!-- Поле ввода фото автомобиля -->
+            <div class="form-group">
+                <label for="carImage">Фото автомобиля:</label>
+                <input type="file" id="carImage" name="carImage" required>
+            </div>
+            <!-- Блок для отображения ответа сервера -->
+            <div id="response" class="response-message"></div>
+            <!-- Кнопка отправки формы -->
+            <button type="submit" class="submit-button">Сохранить</button>
+        </form>
+    </div>
+
+    <!-- Скрипт для обработки формы -->
+    <script>
+        document.getElementById('carForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Предотвращаем стандартную отправку формы
+
+            var formData = new FormData(this);
+
+            // Отправка данных формы на сервер
+            fetch('/submit', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(data => {
+                // Отображение ответа сервера
+                document.getElementById('response').innerText = data;
+            })
+            .catch(error => {
+                // Обработка ошибок
+                document.getElementById('response').innerText = 'Произошла ошибка при сохранении данных.';
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>
